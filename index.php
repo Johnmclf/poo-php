@@ -1,14 +1,6 @@
 <?php
 declare(strict_types=1);
 
-const RESULT_WINNER = 1;
-const RESULT_LOSER = -1;
-const RESULT_DRAW = 0;
-const RESULT_POSSIBILITIES = [RESULT_WINNER, RESULT_LOSER, RESULT_DRAW];
-
-$greg = 400;
-$jade = 800;
-
 class Player
 {
     public int $level;
@@ -16,36 +8,55 @@ class Player
 
 class Encounter
 {
-    public function probabilityAgainst(int $levelPlayerOne, int $againstLevelPlayerTwo)
+    private const RESULT_WINNER = 1;
+    private const RESULT_LOSER = -1;
+    private const RESULT_DRAW = 0;
+    private const RESULT_POSSIBILITIES = [self::RESULT_WINNER, self::RESULT_LOSER, self::RESULT_DRAW];
+
+    static function probabilityAgainst(int $levelPlayerOne, int $againstLevelPlayerTwo)
     {
         return 1/(1+(10 ** (($againstLevelPlayerTwo - $levelPlayerOne)/400)));
     }
 
-    public function setNewLevel(int &$levelPlayerOne, int $againstLevelPlayerTwo, int $playerOneResult)
+    static function setNewLevel(int &$levelPlayerOne, int $againstLevelPlayerTwo, int $playerOneResult)
     {
-        if (!in_array($playerOneResult, RESULT_POSSIBILITIES)) {
-            trigger_error(sprintf('Invalid result. Expected %s',implode(' or ', RESULT_POSSIBILITIES)));
+        if (!in_array($playerOneResult, self::RESULT_POSSIBILITIES)) {
+            trigger_error(sprintf('Invalid result. Expected %s',implode(' or ', self::RESULT_POSSIBILITIES)));
         }
 
         $levelPlayerOne += (int) (32 * ($playerOneResult - self::probabilityAgainst($levelPlayerOne, $againstLevelPlayerTwo)));
+    }
+
+    static function getWinner(){
+        return self::RESULT_WINNER;
+    }
+
+    static function getLoser(){
+        return self::RESULT_LOSER;
     }
 }
 
 $encounter = new Encounter;
 
+$greg = new Player;
+$greg->level=400;
+
+$jade = new Player;
+$jade->level = 800;
+
 echo sprintf(
     'Greg à %.2f%% chance de gagner face a Jade',
-    $encounter->probabilityAgainst($greg, $jade)*100
+    $encounter->probabilityAgainst($greg->level, $jade->level)*100
 ).PHP_EOL;
 
 // Imaginons que greg l'emporte tout de même.
-$encounter->setNewLevel($greg, $jade, RESULT_WINNER);
-$encounter->setNewLevel($jade, $greg, RESULT_LOSER);
+$encounter->setNewLevel($greg->level, $jade->level, $encounter->getWinner());
+$encounter->setNewLevel($jade->level, $greg->level, $encounter->getLoser());
 
 echo sprintf(
     'les niveaux des joueurs ont évolués vers %s pour Greg et %s pour Jade',
-    $greg,
-    $jade
+    $greg->level,
+    $jade->level
 );
 
 exit(0);
